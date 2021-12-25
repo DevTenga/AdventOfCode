@@ -37,9 +37,10 @@ function table_deepCopy(t)
 end
 
 function table_deepLinearPrint(t, _isRecursive)
+	if not t then return end
 	local _str = "["
 	
-	for _,v in ipairs(t) do
+	for _,v in next,t do
 		_str = _str .. (type(v) ~= "table" and v or table_deepLinearPrint(v, true))..","
 	end
 
@@ -56,35 +57,67 @@ function increase_val_at(t, idx, val, isFront)
 	if type(selected) == "number" then
 		t[idx] = selected + val
 	else
-		increase_val_at(selected, isFront and 1 or #selected, val)
+		increase_val_at(selected, isFront and 1 or #selected, val, isFront)
 	end
 end
 
-function explode_num(t, tParent, tParentIdx, tPrev, tPrevIdx, tNext, tNextIdx, depth)
-	depth = depth or 0
-	local foundTable
+function find_first_right_element()
+	
+end
+
+
+
+function explode_num(indices, t, tParent, tParentIdx, tPrev, tPrevIdx, tNext, tNextIdx, depth, selIdx)
+	depth = depth or 1
+
+	local foundTable, didExplode, isDeepEnough, addend
 	
 	for i,v in ipairs(t) do
+		local currentIndices = table_deepCopy(indices)
+		currentIndices[#currentIndices + 1] = i
+
 		if type(v) == "table" then
 			
-			local tPrev = t[i - 1] and t or tPrev
-			local tNext = t[i + 1] and t or tNext
-			local tPrevIdx = t[i - 1] and i - 1 or tPrevIdx
-			local tNextIdx = t[i + 1] and i + 1 or tNextIdx
+			tPrev = t[i - 1] and t or tPrev
+			tNext = t[i + 1] and t or tNext
+			tPrevIdx = t[i - 1] and i - 1 or tPrevIdx
+			tNextIdx = t[i + 1] and i + 1 or tNextIdx
 
-			local isDeepEnough,didExplode = explode_num(v, t, i, tPrev, tPrevIdx, tNext, tNextIdx, depth + 1)
-			--if didExplode then return true, true end
+			isDeepEnough, didExplode, addend = explode_num(currentIndices, v, t, i, tPrev, tPrevIdx, tNext, tNextIdx, depth + 1)
 			foundTable = true
+
+			if tParentIdx == 1 and addend then
+				increase_val_at(tParent,2,addend,true)
+				addend = nil
+			end
 			if isDeepEnough then break end
 		end
+
 	end
 
 	if not foundTable and depth >= 4 then
+	--[[	print 'PARAMS:'
+		table_deepLinearPrint(tPrev)
+		table_deepLinearPrint(tNext)
+		print(tPrevIdx)
+		print(tNextIdx)
+		print()
+--]]
 		increase_val_at(tPrev, tPrevIdx ,t[1],false)
-		increase_val_at(tNext, tNextIdx ,t[2],true)
 		tParent[tParentIdx] = 0
-		return true,true
+		
+		if tParentIdx == 1 then
+			increase_val_at(tParent,2,t[2],true)
+			addend = nil
+		else
+			addend = t[2]
+		end
+
+		return true,true,addend
 	end
+
+	return isDeepEnough, didExplode, addend
+
 end
 
 
@@ -147,14 +180,28 @@ for _,file in ipairs(arg) do
 
 	local function reduce_snail_num(snailNum)
 		for i,v in ipairs(snailNum) do
-			local didExplode,didSplit 
+			local didExplode,didSplit,addend 
 			repeat 
-				_, didExplode = explode_num(v)
+				_, didExplode,addend = explode_num({i},v)
+
+				if addend and i == 1 then
+					increase_val_at(snailNum,2,addend,true)
+				end
+
+				-- Debugging
+				--[[print("AT ".. i.. " AFTER EXPLOSION:")
+				table_deepLinearPrint(snailNum)
+				print ("AT "..i.." AFTER SPLIT:")--]]
+				
 				didSplit = split_num(v)
+				--table_deepLinearPrint(snailNum)
+
+				--print("\nSHOULD GO NEXT?", not didExplode, not didSplit,"\n\n")
+				
 			until not didExplode and not didSplit
 		end
 
-		return snailNum
+		return snailNum, indices
 	end
 
 	local mainStr = ""
@@ -184,6 +231,8 @@ for _,file in ipairs(arg) do
 	for i = 1, #snailNums - 1 do
 		local currentNum,nextNum = snailSum or snailNums[1], snailNums[i + 1]
 		snailSum = {table_deepCopy(currentNum),table_deepCopy(nextNum)}
+		--[[print("AFTER ADDITION:")
+		table_deepLinearPrint(snailSum)--]]
 		snailSum = reduce_snail_num(snailSum)
 	end
 
@@ -195,9 +244,11 @@ for _,file in ipairs(arg) do
 	end
 	--]]
 
+	print("FILE:",file)
+
 	table_deepLinearPrint(snailSum)
 
 	local answer = 0
 
-	print("For File:",file,"Answer is:",answer)
+	--print("For File:",file,"Answer is:",answer)
 end
