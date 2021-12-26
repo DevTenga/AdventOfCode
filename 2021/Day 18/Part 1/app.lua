@@ -227,13 +227,16 @@ for _,file in ipairs(arg) do
 
 	--table_deepPrint(snailNums)
 
+	print("\n=================\n\nFILE:",file)
+
 	-- DO NOT DELETE
 	for i = 1, #snailNums - 1 do
 		local currentNum,nextNum = snailSum or snailNums[1], snailNums[i + 1]
+		if not nextNum then break end
 		snailSum = {table_deepCopy(currentNum),table_deepCopy(nextNum)}
-		--[[print("AFTER ADDITION:")
-		table_deepLinearPrint(snailSum)--]]
 		snailSum = reduce_snail_num(snailSum)
+		print("AFTER REDUCTION:")
+		table_deepLinearPrint(snailSum)
 	end
 
 	-- Debugging
@@ -244,7 +247,6 @@ for _,file in ipairs(arg) do
 	end
 	--]]
 
-	print("FILE:",file)
 
 	table_deepLinearPrint(snailSum)
 
