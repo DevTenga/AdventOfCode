@@ -67,30 +67,27 @@ end
 
 
 
-function explode_num(indices, t, tParent, tParentIdx, tPrev, tPrevIdx, tNext, tNextIdx, depth, selIdx)
+function explode_num(t, tParent, tParentIdx, depth)
 	depth = depth or 1
 
-	local foundTable, didExplode, isDeepEnough, addend
+	local foundTable, didExplode, isDeepEnough, addend, pAddend
 	
 	for i,v in ipairs(t) do
-		local currentIndices = table_deepCopy(indices)
-		currentIndices[#currentIndices + 1] = i
 
 		if type(v) == "table" then
-			
-			tPrev = t[i - 1] and t or tPrev
-			tNext = t[i + 1] and t or tNext
-			tPrevIdx = t[i - 1] and i - 1 or tPrevIdx
-			tNextIdx = t[i + 1] and i + 1 or tNextIdx
-
-			isDeepEnough, didExplode, addend = explode_num(currentIndices, v, t, i, tPrev, tPrevIdx, tNext, tNextIdx, depth + 1)
+			isDeepEnough, didExplode, addend, pAddend = explode_num(v, t, i, depth + 1)
 			foundTable = true
 
 			if tParentIdx == 1 and addend then
 				increase_val_at(tParent,2,addend,true)
 				addend = nil
+			elseif tParentIdx == 2 and pAddend then
+				increase_val_at(tParent,1,pAddend,false)
+				pAddend = nil
 			end
+
 			if isDeepEnough then break end
+			if didExplode then return explode_num(t, tParent, tParentIdx, depth) end
 		end
 
 	end
@@ -103,32 +100,39 @@ function explode_num(indices, t, tParent, tParentIdx, tPrev, tPrevIdx, tNext, tN
 		print(tNextIdx)
 		print()
 --]]
-		increase_val_at(tPrev, tPrevIdx ,t[1],false)
+		--increase_val_at(tPrev, tPrevIdx ,t[1],false)
 		tParent[tParentIdx] = 0
 		
 		if tParentIdx == 1 then
 			increase_val_at(tParent,2,t[2],true)
 			addend = nil
-		else
+			pAddend = t[1]
+		elseif tParentIdx == 2 then
+			increase_val_at(tParent,1,t[1],false)
+			pAddend = nil
 			addend = t[2]
 		end
 
-		return true,true,addend
+		return true,true,addend, pAddend
 	end
 
-	return isDeepEnough, didExplode, addend
+	return isDeepEnough, didExplode, addend, pAddend
 
 end
 
 
 function split_num(t)
-	
+	--print("RECEIVED:")
+	--table_deepLinearPrint(t)
 	for i,v in ipairs(t) do
 		if type(v) == "table" then
+			--print("FURTHER SPLIT:")
+			--table_deepLinearPrint(v)
 			local didSplit = split_num(v)
 			if didSplit then return true end
 		elseif type(v) == "number" and v >= 10 then
 			t[i] = {math.floor(v / 2), math.ceil(v / 2)}
+			--print("SPLIT",v)
 			return true
 		end
 	end
@@ -180,28 +184,44 @@ for _,file in ipairs(arg) do
 
 	local function reduce_snail_num(snailNum)
 		for i,v in ipairs(snailNum) do
-			local didExplode,didSplit,addend 
-			repeat 
-				_, didExplode,addend = explode_num({i},v)
+			local didExplode,didSplit
+			local addend,pAddend = nil, nil
+			_, didExplode, addend, pAddend = explode_num(v, snailNum, i, 1)
 
-				if addend and i == 1 then
-					increase_val_at(snailNum,2,addend,true)
-				end
+			if addend and i == 1 then
+				increase_val_at(snailNum,2,addend,true)
+			elseif pAddend and i == 2 then
+				increase_val_at(snailNum,1,pAddend,false)
+			end
 
-				-- Debugging
-				--[[print("AT ".. i.. " AFTER EXPLOSION:")
-				table_deepLinearPrint(snailNum)
-				print ("AT "..i.." AFTER SPLIT:")--]]
-				
-				didSplit = split_num(v)
-				--table_deepLinearPrint(snailNum)
+			-- Debugging
+			print("AT ".. i.. " AFTER EXPLOSION:")
+			table_deepLinearPrint(snailNum)
 
-				--print("\nSHOULD GO NEXT?", not didExplode, not didSplit,"\n\n")
-				
-			until not didExplode and not didSplit
+			if didExplode then
+				return reduce_snail_num(snailNum)
+			end
+
+			--print("\nSHOULD GO NEXT?", not didExplode, not didSplit,"\n\n")
+		
 		end
 
-		return snailNum, indices
+		for i,v in ipairs(snailNum) do
+
+			print ("AT "..i.." AFTER SPLIT:")--]]
+			
+			didSplit = split_num(v)
+			table_deepLinearPrint(snailNum)
+			--print("DID SPLIT:", didSplit)
+			print()
+
+			if didSplit then
+				return reduce_snail_num(snailNum)
+			end
+		end
+			
+
+		return snailNum
 	end
 
 	local mainStr = ""
@@ -234,6 +254,8 @@ for _,file in ipairs(arg) do
 		local currentNum,nextNum = snailSum or snailNums[1], snailNums[i + 1]
 		if not nextNum then break end
 		snailSum = {table_deepCopy(currentNum),table_deepCopy(nextNum)}
+		print("AFTER ADDITION:")
+		table_deepLinearPrint(snailSum)
 		snailSum = reduce_snail_num(snailSum)
 		print("AFTER REDUCTION:")
 		table_deepLinearPrint(snailSum)
