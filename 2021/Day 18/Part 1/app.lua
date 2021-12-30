@@ -5,7 +5,6 @@
 -- https://adventofcode.com/2021/day/18
 
 
-
 -- ========================== Table Utilities ========================== --
 
 function table_deepPrint(t,tabCount,_isRecursive)
@@ -48,65 +47,107 @@ function table_deepLinearPrint(t, _isRecursive)
 	if not _isRecursive then print(_str) else return _str end
 end
 
-
 -- ========================== Core Functions =========================== --
 
-function increase_val_at(t, idx, val, isFront)
+-- Converts a string snail number to a table.
+local function parse_snailNum(snailNum)
+	-- Remove the outermost brackets.
+	snailNum = string.sub(snailNum,2,#snailNum - 1)
+
+	local container = {}
+
+	-- Whether it has an inner pair, or just numbers.
+	-- If it does, when to stop collecting the string.
+	local isInHierarchy = false
+	local hierarchyCount = 0
+
+	-- The position of the new element in {container}.
+	-- It is lighter to just add it when needed rather
+	-- than getting the size of {container} every time.
+	local idx = 1 
+
+	-- The string that is passed to maybe the inner recursion
+	-- for parsing.
+	local currentStr = ""
+
+	for char in string.gmatch(snailNum,"(.)") do
+		
+		if tonumber(char) and not isInHierarchy then
+			container[idx] = tonumber(char)
+			idx = idx + 1
+			currentStr = ""
+		elseif char == "[" then
+			isInHierarchy = true
+			hierarchyCount = hierarchyCount + 1
+			currentStr = currentStr .. char
+		elseif char == "]" and hierarchyCount == 1 then
+			isInHierarchy = false
+			hierarchyCount = 0
+			container[idx] = parse_snailNum(currentStr .. "]")
+			idx = idx + 1
+			currentStr = ""
+		elseif char == "]" then
+			hierarchyCount = hierarchyCount - 1
+			currentStr = currentStr.."]"
+		elseif isInHierarchy or char ~= "," then
+			currentStr = currentStr .. char
+		end
+
+	end
+
+	return container
+end
+
+-- Used to increase the value of the number
+-- adjacent to an exploding pair. Uses 
+-- recursion to move to the inner pairs.
+local function increase_val_at(t, idx, val, checkFront)
 	if not t then return end
 	local selected = t[idx]
 	if type(selected) == "number" then
 		t[idx] = selected + val
 	else
-		increase_val_at(selected, isFront and 1 or #selected, val, isFront)
+		increase_val_at(selected, checkFront and 1 or #selected, val, checkFront)
 	end
 end
 
-function find_first_right_element()
-	
-end
-
-
-
-function explode_num(t, tParent, tParentIdx, depth)
-	depth = depth or 1
+-- Explodes a pair. 
+local function explode_snailNum(t, tParent, tParentIdx, depth)
+	depth = depth or 1 -- Setting a default value for the first time case.
 
 	local foundTable, didExplode, isDeepEnough, addend, pAddend
 	
 	for i,v in ipairs(t) do
-
 		if type(v) == "table" then
-			isDeepEnough, didExplode, addend, pAddend = explode_num(v, t, i, depth + 1)
-			foundTable = true
+			isDeepEnough, didExplode, addend, pAddend = explode_snailNum(v, t, i, depth + 1)
+			foundTable = true -- Found a table. Do not do addition in this depth.
 
+			-- If it is the first element, add to the right.
 			if tParentIdx == 1 and addend then
 				increase_val_at(tParent,2,addend,true)
 				addend = nil
+			-- Else, add to the left.
 			elseif tParentIdx == 2 and pAddend then
 				increase_val_at(tParent,1,pAddend,false)
 				pAddend = nil
 			end
 
+			-- Deep table. Check for addition now.
 			if isDeepEnough then break end
-			if didExplode then return explode_num(t, tParent, tParentIdx, depth) end
 		end
-
 	end
 
+
+	-- Is the deepest table. Do the addition stuff.
 	if not foundTable and depth >= 4 then
-	--[[	print 'PARAMS:'
-		table_deepLinearPrint(tPrev)
-		table_deepLinearPrint(tNext)
-		print(tPrevIdx)
-		print(tNextIdx)
-		print()
---]]
-		--increase_val_at(tPrev, tPrevIdx ,t[1],false)
 		tParent[tParentIdx] = 0
 		
+		-- If it is the first element, add to the right.
 		if tParentIdx == 1 then
 			increase_val_at(tParent,2,t[2],true)
 			addend = nil
 			pAddend = t[1]
+		-- Else, add to the left.
 		elseif tParentIdx == 2 then
 			increase_val_at(tParent,1,t[1],false)
 			pAddend = nil
@@ -116,122 +157,89 @@ function explode_num(t, tParent, tParentIdx, depth)
 		return true,true,addend, pAddend
 	end
 
+	-- Addition criterion not met. Return any computed results.
 	return isDeepEnough, didExplode, addend, pAddend
-
 end
 
-
-function split_num(t)
-	--print("RECEIVED:")
-	--table_deepLinearPrint(t)
+-- Splits a large number.
+local function split_snailNum(t)
 	for i,v in ipairs(t) do
+		-- Look deeper. It is a table.
 		if type(v) == "table" then
-			--print("FURTHER SPLIT:")
-			--table_deepLinearPrint(v)
-			local didSplit = split_num(v)
-			if didSplit then return true end
+			local didSplit = split_snailNum(v)
+			if didSplit then return true end -- Otherwise, continue.
+		-- No deeper. If it is large, split it. 
 		elseif type(v) == "number" and v >= 10 then
 			t[i] = {math.floor(v / 2), math.ceil(v / 2)}
-			--print("SPLIT",v)
 			return true
 		end
 	end
-
 end
 
+-- This is the main wrapper. It reduces a snail number.
+local function reduce_snailNum(snailNum)
+	for i,v in ipairs(snailNum) do
+		local didExplode,didSplit
+		local addend,pAddend = nil, nil
+		_, didExplode, addend, pAddend = explode_snailNum(v, snailNum, i, 1)
+
+		-- If it is the first element, add to the right.
+		if addend and i == 1 then
+			increase_val_at(snailNum,2,addend,true)
+		elseif pAddend and i == 2 then
+		-- Else, add to the left.
+			increase_val_at(snailNum,1,pAddend,false)
+		end
+
+		-- Debugging
+		--[[print("AT ".. i.. " AFTER EXPLOSION:")
+		table_deepLinearPrint(snailNum)]]
+
+		-- If it exploded once, it may do so once again. 
+		-- It is safer to check.
+		-- Returns to the top of the reduction program flow.
+		if didExplode then
+			return reduce_snailNum(snailNum)
+		end
+	
+	end
+
+	for i,v in ipairs(snailNum) do
+		didSplit = split_snailNum(v)
+
+		-- Debugging
+		--[[
+		print ("AT "..i.." AFTER SPLIT:")
+		table_deepLinearPrint(snailNum)
+		print()
+		--]]
+
+		-- If it split once, it may do so once again. 
+		-- It is safer to check.
+		-- Returns to the top of the reduction program flow.
+		if didSplit then
+			return reduce_snailNum(snailNum)
+		end
+	end
+		
+	return snailNum
+end
+
+
+
+-- ============================ Code Flow ============================== --
 for _,file in ipairs(arg) do
 	local contents = io.open(file):read("*all")
 
 	local snailNums = {}
 
-	local function parse_snailNum(snailNum)
-		snailNum = string.sub(snailNum,2,#snailNum - 1)
-		local container = {}
-
-		local isInHierarchy = false
-		local hierarchyCount = 0
-		local idx = 1
-		local currentStr = ""
-
-		for i = 1, #snailNum do
-			local char = string.sub(snailNum,i,i)
-			
-			if tonumber(char) and not isInHierarchy then
-				container[idx] = tonumber(char)
-				idx = idx + 1
-				currentStr = ""
-			elseif char == "[" then
-				isInHierarchy = true
-				hierarchyCount = hierarchyCount + 1
-				currentStr = currentStr .. char
-			elseif char == "]" and hierarchyCount == 1 then
-				isInHierarchy = false
-				hierarchyCount = 0
-				container[idx] = parse_snailNum(currentStr .. "]")
-				idx = idx + 1
-				currentStr = ""
-			elseif char == "]" then
-				hierarchyCount = hierarchyCount - 1
-				currentStr = currentStr.."]"
-			elseif isInHierarchy or char ~= "," then
-				currentStr = currentStr .. char
-			end
-
-		end
-
-		return container
-	end
-
-	local function reduce_snail_num(snailNum)
-		for i,v in ipairs(snailNum) do
-			local didExplode,didSplit
-			local addend,pAddend = nil, nil
-			_, didExplode, addend, pAddend = explode_num(v, snailNum, i, 1)
-
-			if addend and i == 1 then
-				increase_val_at(snailNum,2,addend,true)
-			elseif pAddend and i == 2 then
-				increase_val_at(snailNum,1,pAddend,false)
-			end
-
-			-- Debugging
-			print("AT ".. i.. " AFTER EXPLOSION:")
-			table_deepLinearPrint(snailNum)
-
-			if didExplode then
-				return reduce_snail_num(snailNum)
-			end
-
-			--print("\nSHOULD GO NEXT?", not didExplode, not didSplit,"\n\n")
-		
-		end
-
-		for i,v in ipairs(snailNum) do
-
-			print ("AT "..i.." AFTER SPLIT:")--]]
-			
-			didSplit = split_num(v)
-			table_deepLinearPrint(snailNum)
-			--print("DID SPLIT:", didSplit)
-			print()
-
-			if didSplit then
-				return reduce_snail_num(snailNum)
-			end
-		end
-			
-
-		return snailNum
-	end
-
 	local mainStr = ""
 
+	-- Collect all the snail numbers in a table.
 	local function handle_str()
-		--print(mainStr)
 		local num = parse_snailNum(mainStr)
 		snailNums[#snailNums + 1] = num
 		mainStr = ""
-		--table_deepPrint(num)
 	end
 
 	for char in string.gmatch(contents,"(.)") do
@@ -243,33 +251,43 @@ for _,file in ipairs(arg) do
 	end
 	handle_str()
 
-	local snailSum
+	local snailSum -- Storing the sum.
 
-	--table_deepPrint(snailNums)
+	print("=======================================\nFILE:",file)
 
-	print("\n=================\n\nFILE:",file)
-
-	-- DO NOT DELETE
 	for i = 1, #snailNums - 1 do
+		-- If it is the first element, pick it, else pcik the sum.
 		local currentNum,nextNum = snailSum or snailNums[1], snailNums[i + 1]
-		if not nextNum then break end
+		if not nextNum then break end -- Reached the end prematurely.
+
+		-- Form a pair.
 		snailSum = {table_deepCopy(currentNum),table_deepCopy(nextNum)}
+		
+		-- Debugging
+		--[[
 		print("AFTER ADDITION:")
 		table_deepLinearPrint(snailSum)
-		snailSum = reduce_snail_num(snailSum)
+		--]]
+
+		-- Reduce it.
+		snailSum = reduce_snailNum(snailSum)	
+		
+		-- Debugging
+		--[[
 		print("AFTER REDUCTION:")
 		table_deepLinearPrint(snailSum)
+		--]]
 	end
 
 	-- Debugging
 	--[[
 	for _,snailNum in ipairs(snailNums) do
-		explode_num(snailNum)
+		explode_snailNum(snailNum)
 		table_deepLinearPrint(snailNum)
 	end
 	--]]
 
-
+	print "FINAL SUM:"
 	table_deepLinearPrint(snailSum)
 
 	local answer = 0
