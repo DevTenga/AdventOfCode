@@ -71,3 +71,21 @@ function initnext() {
 		cp "$1/Part 1"/* "$1/Part 2"
 	fi
 }
+
+function ntouch()  {
+	adr=$1
+	name=$2
+	count=$3
+	ext=$4
+
+	COUNT=1
+
+	while [[ $COUNT -le $count ]]; do
+		if [[ "$ext" = " " || ! -n "$ext" ]] ; then
+			ext=".txt"
+		fi
+		touch "$adr/$name$COUNT$ext"
+
+		COUNT=$(($COUNT + 1))
+	done
+}

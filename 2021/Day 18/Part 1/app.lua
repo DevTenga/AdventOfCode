@@ -226,6 +226,13 @@ local function reduce_snailNum(snailNum)
 end
 
 
+-- Get the magnitude of the snail number.
+local function get_snailNum_magnitude(snailNum)
+	return 
+	type(snailNum) == "number" 
+	and snailNum
+	or 3 * get_snailNum_magnitude(snailNum[1]) + 2 * get_snailNum_magnitude(snailNum[2])
+end
 
 -- ============================ Code Flow ============================== --
 for _,file in ipairs(arg) do
@@ -290,7 +297,7 @@ for _,file in ipairs(arg) do
 	print "FINAL SUM:"
 	table_deepLinearPrint(snailSum)
 
-	local answer = 0
+	local answer = get_snailNum_magnitude(snailSum or snailNums[1])
 
-	--print("For File:",file,"Answer is:",answer)
+	print("For File:",file,"Answer is:",answer)
 end
