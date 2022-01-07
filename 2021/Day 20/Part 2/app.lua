@@ -126,11 +126,15 @@ for _,file in ipairs(arg) do
 			end 
 		end
 
-		filler = algo[get_decimal_from_bin(string.rep(filler,9))]
+		local bin_table = {}
+		for i = 1, 9 do bin_table[i] = filler end
 
+		filler = algo[get_decimal_from_bin(bin_table)]
 		output = _output
 	end
 
+	-- Debugging
+	--[[
 	print "Input:"
 	for i = 0,#input do 
 		for j = 0,#input[i] do 
@@ -139,19 +143,22 @@ for _,file in ipairs(arg) do
 		io.stdout:write("\n") 
 	end
 	io.stdout:write("\n\n\n")
+	]]
+	for _ = 1,50 do
+		enhance()
+		-- Debugging
+		--[[
+		for i = 0,#output do 
+			for j = 0, #output[i] do 
+				io.stdout:write(output[i][j]) 
+			end 
+			io.stdout:write("\n") 
+		end
+		io.stdout:write("\n\n\n")
+		]]
 
-	enhance()
-
-	for i = 0,#output do 
-		for j = 0, #output[i] do 
-			io.stdout:write(output[i][j]) 
-		end 
-		io.stdout:write("\n") 
+		input = output
 	end
-	io.stdout:write("\n\n\n")
-
-	input = output
-	enhance()
 
 	local answer = 0
 
