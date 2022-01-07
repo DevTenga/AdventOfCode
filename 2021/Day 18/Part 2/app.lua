@@ -47,6 +47,36 @@ function table_deepLinearPrint(t, _isRecursive)
 	if not _isRecursive then print(_str) else return _str end
 end
 
+
+-- ========================== Math Utilities ========================== --
+function math_get_max3_idx(t)
+	local max1,max2,max3 = 0,0,0
+	local imax1,imax2,imax3 = 0,0,0
+
+	for idx,val in ipairs(t) do
+		if val >= max1 then
+			max3 = max2
+			max2 = max1
+			max1 = val
+
+			imax3 = imax2
+			imax2 = imax1
+			imax1 = idx
+		elseif val >= max2 then
+			max3 = max2
+			max2 = val
+
+			imax3 = imax2
+			imax2 = idx
+		elseif val >= max3 then
+			max3 = val
+			imax3 = idx
+		end
+	end
+
+	return imax1, imax2, imax3, max1, max2, max3
+end
+
 -- ========================== Core Functions =========================== --
 
 -- Converts a string snail number to a table.
@@ -136,7 +166,6 @@ local function explode_snailNum(t, tParent, tParentIdx, depth)
 			if isDeepEnough then break end
 		end
 	end
-
 
 	-- Is the deepest table. Do the addition stuff.
 	if not foundTable and depth >= 4 then
@@ -234,6 +263,14 @@ local function get_snailNum_magnitude(snailNum)
 	or 3 * get_snailNum_magnitude(snailNum[1]) + 2 * get_snailNum_magnitude(snailNum[2])
 end
 
+-- Get just the sum of all numbers
+local function get_snailNum_sum(snailNum)
+	return 
+	type(snailNum) == "number" 
+	and snailNum
+	or get_snailNum_sum(snailNum[1]) + get_snailNum_sum(snailNum[2])
+end
+
 -- ============================ Code Flow ============================== --
 for _,file in ipairs(arg) do
 	local contents = io.open(file):read("*all")
@@ -261,48 +298,22 @@ for _,file in ipairs(arg) do
 
 	print("=======================================\nFILE:",file)
 
+	-- Some smaller names for functions.
+	local mag = get_snailNum_magnitude
+	local copy = table_deepCopy
+	local reduce = reduce_snailNum
 	local idx = 1
 
-	for i = 1, #snailNums - 1 do
-		-- If it is the first element, pick it, else pcik the sum.
-		local currentNum,nextNum = snailNums[i], snailNums[i + 1]
-		if not nextNum then break end -- Reached the end prematurely.
-
-		-- Form the pairs.
-		local snailSum = {table_deepCopy(currentNum),table_deepCopy(nextNum)}
-		local snailSumInv = {table_deepCopy(snailSum[2]), table_deepCopy(snailSum[1])}
-		
-		-- Debugging
-		--[[
-		print("AFTER ADDITION:")
-		table_deepLinearPrint(snailSum)
-		--]]
-
-		-- Reduce them.
-		snailSum = reduce_snailNum(snailSum)
-		snailSumInv = reduce_snailNum(snailSumInv)	
-		
-		-- Debugging
-		--[[
-		print("AFTER REDUCTION:")
-		table_deepLinearPrint(snailSum)
-		--]]
-
-		-- Put them in the magnitudes table.
-		snailMags[idx] = get_snailNum_magnitude(snailSum)
-		snailMags[idx + 1] = get_snailNum_magnitude(snailSumInv)
-		idx = idx + 2
+	-- Loop through each element, add in both ways and put in a table.
+	for i = 1, #snailNums do
+		for j = i + 1, #snailNums do
+			snailMags[idx] = mag(reduce {copy(snailNums[i]), copy(snailNums[j]) })
+			snailMags[idx + 1] = mag(reduce {copy(snailNums[j]), copy(snailNums[i])})
+			idx = idx + 2 -- We used up two slots.
+		end
 	end
 
-	-- Debugging
-	--[[
-	for _,snailNum in ipairs(snailNums) do
-		explode_snailNum(snailNum)
-		table_deepLinearPrint(snailNum)
-	end
-	--]]
-
-	local answer = get_snailNum_magnitude(snailSum or snailNums[1])
+	local answer = math.max(table.unpack(snailMags))
 
 	print("For File:",file,"Answer is:",answer)
 end
