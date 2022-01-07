@@ -4,6 +4,50 @@
 
 -- https://adventofcode.com/2021/day/20
 
+-- ========================== Table Utilities ========================== --
+
+function table_deepPrint(t,tabCount,_isRecursive)
+	tabCount = tabCount or 0
+	if not _isRecursive then print(string.rep("\t",tabCount)..'{') end
+	for k,v in next,t do
+		if type(v) ~= "table" then
+			print(string.rep("\t",tabCount + 1)..'['..k..'] = '..v..',')
+		else
+			print(string.rep("\t",tabCount + 1)..'['..k..'] = {')
+			table_deepPrint(v,tabCount + 1,true)
+		end
+	end
+	print(string.rep("\t",tabCount)..'}')
+	if not _isRecursive then print("\n\n======================\n\n") end
+end
+
+function table_deepCopy(t)
+	local _t = {}
+
+	for k,v in next,t do
+		if type(v) ~= "table" then
+			_t[k] = v
+		else
+			_t[k] = table_deepCopy(v)
+		end
+	end
+	return _t
+end
+
+function table_deepLinearPrint(t, _isRecursive)
+	if not t then return end
+	local _str = '['
+	
+	for _,v in next,t do
+		_str = _str .. (type(v) ~= "table" and v or table_deepLinearPrint(v, true))
+	end
+
+	_str = _str..']'
+	if not _isRecursive then print(_str) else return _str end
+end
+
+-- =========================== Core Program ============================ --
+
 for _,file in ipairs(arg) do
 	local contents = io.open(file):read("*all")
 
@@ -11,6 +55,7 @@ for _,file in ipairs(arg) do
 	local algo = {}
 	local input = {{}}
 	local output = {{}}
+	local filler = '.' -- This is the value that will remain in the outer cells.
 
 	local inputIdx,inputInnerIdx,algoIdx = 0,0,0
 
@@ -19,7 +64,7 @@ for _,file in ipairs(arg) do
 		local decimal = 0
 
 		for i = 1,maxPower do
-			decimal = decimal + 2 ^ (maxPower - i) * (bin_table[i] == "." and 0 or 1)
+			decimal = decimal + (2 ^ (maxPower - i)) * (bin_table[i] == '#' and 1 or 0)
 		end
 		return decimal
 	end
@@ -52,7 +97,7 @@ for _,file in ipairs(arg) do
 		local pixel = {}
 		for i = -1,1,1 do
 			for j = -1,1,1 do
-				pixel[#pixel + 1] = input[pixelY + i] and input[pixelY + i][pixelX + j] or "."
+				pixel[#pixel + 1] = input[pixelY + i] and input[pixelY + i][pixelX + j] or filler
 			end
 		end
 		return pixel
@@ -61,9 +106,8 @@ for _,file in ipairs(arg) do
 	local function enhance()
 		local _output = {{}}
 
-		for i = -1, #input + 1 do
-			local pixels = input[i]
-			for j = -1, #input + 1 do
+		for i = -1, #input+1 do
+			for j = -1, #input+1 do
 				
 				if not _output[i + 1] then
 					_output[i + 1] = {}
@@ -71,15 +115,23 @@ for _,file in ipairs(arg) do
 
 				local idx = get_decimal_from_bin(get_idx(j,i))
 				local pixel = algo[idx]
-				--[[for _,v in ipairs(get_idx(j,i)) do io.stdout:write(v or "") end
-				print()]]
+				
+				-- Degubbing
+				--[[
+				print(i,j,table_deepLinearPrint(get_idx(j,i),true), idx, pixel)
+				for _,v in ipairs(get_idx(j,i)) do io.stdout:write(v or "") end
+				print()
+				]]
 				_output[i + 1][j + 1] = pixel
 			end 
 		end
 
+		filler = algo[get_decimal_from_bin(string.rep(filler,9))]
+
 		output = _output
 	end
 
+	print "Input:"
 	for i = 0,#input do 
 		for j = 0,#input[i] do 
 			io.stdout:write(input[i][j]) 
@@ -101,34 +153,16 @@ for _,file in ipairs(arg) do
 	input = output
 	enhance()
 
-	for i = 0,#output do 
-		for j = 0, #output[i] do 
-			io.stdout:write(output[i][j]) 
-		end 
-		io.stdout:write("\n") 
-	end
-	io.stdout:write("\n\n\n")
-
-	input = output
-	enhance()
-
 	local answer = 0
-
 
 	for i = 0,#output do 
 		for j = 0, #output[i] do 
 			io.stdout:write(output[i][j])
-			if output[i][j] == "#" then answer = answer + 1 end 
+			if output[i][j] == '#' then answer = answer + 1 end 
 		end 
 		io.stdout:write("\n") 
 	end
 	io.stdout:write("\n\n\n")
-	print("ALGO::::::")
-	print(#algo,algo[512],algo[511])
-	for _,c in ipairs(algo) do io.stdout:write(c) end
-	io.stdout:write("\n\n\n")
-
-
 
 	print("For File:",file,"Answer is:",answer)
 end

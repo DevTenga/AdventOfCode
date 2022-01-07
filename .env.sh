@@ -1,5 +1,5 @@
 function test() {
-	if [[ "$3" != " " && -n "$3" ]] ; then
+	if [[ -n "$3" ]] ; then
 		val="$3"
 	else
 		val="*"
