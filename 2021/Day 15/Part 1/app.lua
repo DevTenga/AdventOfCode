@@ -18,11 +18,6 @@ end
 for _,file in ipairs(arg) do
 	local contents = io.open(file):read("*all")
 
-	-- If the path has a number greater than 6,assume there's 
-	-- a better path. (This is not fail-proof, but why not?)
-	-- One more shortcut that is taken is, do not go back or 
-	-- up.
-
 	local risks = {}
 	local correctPaths = {}
 
@@ -38,7 +33,7 @@ for _,file in ipairs(arg) do
 
 	for char in string.gmatch(contents,"(.)") do
 		
-		if char and string.match(char,"\n") then
+		if string.match(char,"\n") then
 			if not base then base = baseCounter end
 		else
 			len = len + 1
@@ -47,35 +42,45 @@ for _,file in ipairs(arg) do
 		end
 	end
 
-
-	local function next_thread(idx, visitedPaths, nextPath)
-		--print("start",idx,risks[idx],len)
+	local function next_thread(idx, visitedPaths)
+		if not risks[idx] then return end
+		visitedPaths[#visitedPaths + 1] = idx
 		if idx == len then
-			--print("found a path")
 			correctPaths[#correctPaths + 1] = table_copy(visitedPaths)
+			--return true
 		end
 
 		local rIdx = idx + 1
-		local dIdx = idx + base 
-		
-		if idx % base ~= 0 
-			and risks[rIdx]
-			--and (not nextPath or nextPath == "right") 
-			--and risks[rIdx] < 9 
-			--and not table_find(visitedPaths,rIdx) 
-		then
-			visitedPaths[#visitedPaths + 1] = rIdx
-			next_thread(rIdx, table_copy(visitedPaths),"down")
-		end
+		local dIdx = idx + base
 
-		if  risks[dIdx]
-			--and (not nextPath or nextPath == "down") 
-			--and risks[dIdx] < 9 
-			--and not table_find(visitedPaths,dIdx) 
-		then
-			print('MOVING DOWN TO:', dIdx)
-			visitedPaths[#visitedPaths + 1] = dIdx
-			next_thread(dIdx, table_copy(visitedPaths),"right")
+		local rRisk = risks[rIdx] or 0
+		local dRisk = risks[dIdx] or 0
+		
+		local res
+
+		if idx % base ~= 0 then
+			if (rRisk < dRisk or table_find(visitedPaths, dIdx)) and not table_find(visitedPaths, rIdx) then
+				res = next_thread(rIdx, table_copy(visitedPaths))
+				
+				--[[if not res and not table_find(visitedPaths, dIdx) then
+					next_thread(dIdx, table_copy(visitedPaths))
+				end]]
+
+			elseif (dRisk < rRisk or table_find(visitedPaths, rIdx)) and not table_find(visitedPaths, dIdx) then
+				res = next_thread(dIdx, table_copy(visitedPaths))
+				
+				--[[if not res and not table_find(visitedPaths, rIdx) then
+					next_thread(rIdx, table_copy(visitedPaths))
+				end]]
+			else
+				if not table_find(visitedPaths, dIdx) then
+					next_thread(dIdx, table_copy(visitedPaths))
+				end
+
+				if not table_find(visitedPaths, rIdx) then
+					next_thread(rIdx, table_copy(visitedPaths))
+				end
+			end
 		end
 
 	end
@@ -86,7 +91,31 @@ for _,file in ipairs(arg) do
 	print()
 	local baseChecker = 1
 
-	for _, val in ipairs(risks) do
+	for i,t in ipairs(correctPaths) do
+		valArr[i] = index_sum(t)
+
+		-- Debugging
+		--[[for idx, val in ipairs(risks) do
+			val = table_find(t,idx) and '@' or '.'
+			io.stdout:write(val)
+
+			if base == baseChecker then
+				io.stdout:write "\n"
+				baseChecker = 1 
+			else
+				baseChecker = baseChecker + 1
+			end
+		end
+		io.stdout:write "\n\n"--]]
+	end
+
+	local answer = math.min(table.unpack(valArr))
+	print "SOLUTION:"
+	local ans = correctPaths[table_find(valArr, answer)]
+	answer = answer - risks[1] -- For removing the value of the first cell which is never entered.
+
+	for idx, val in ipairs(risks) do
+		val = table_find(ans,idx) and "\027[32m"..val.."\027[0m" or val
 		io.stdout:write(val)
 
 		if base == baseChecker then
@@ -96,14 +125,8 @@ for _,file in ipairs(arg) do
 			baseChecker = baseChecker + 1
 		end
 	end
-	io.stdout:write "\n\n"
+	io.stdout:write "\n"
 
-	for i,t in ipairs(correctPaths) do
-		valArr[i] = index_sum(t)
-		--print("PATH:",valArr[i],t)
-	end
-
-	local answer = math.min(table.unpack(valArr))
 
 	print("For File:",file,"Answer is:",answer)
 end
