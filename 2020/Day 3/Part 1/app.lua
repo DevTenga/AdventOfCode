@@ -4,6 +4,9 @@
 
 -- https://adventofcode.com/2021/day/3
 
+
+-- ========================== Table Utilities ========================== --
+
 function table_deepPrint(t,tabCount,_isRecursive)
 	tabCount = tabCount or 0
 	if not _isRecursive then print(string.rep("\t",tabCount).."{") end
@@ -19,6 +22,7 @@ function table_deepPrint(t,tabCount,_isRecursive)
 	if not _isRecursive then print("\n\n======================\n\n") end
 end
 
+-- ============================ Code Flow ============================== --
 
 for _,file in ipairs(arg) do
 	local contents = io.open(file):read("*all")

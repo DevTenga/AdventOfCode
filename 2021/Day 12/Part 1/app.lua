@@ -4,12 +4,16 @@
 
 -- https://adventofcode.com/2021/day/12
 
+-- ========================== Table Utilities ========================== --
+
 local function table_find(t,v)
 	for idx = 0, #t do
 		val = t[idx]
 		if v == val then return idx end
 	end
 end
+
+-- ============================ Code Flow ============================== --
 
 for _,file in ipairs(arg) do
 	local contents = io.open(file):read("*all")
