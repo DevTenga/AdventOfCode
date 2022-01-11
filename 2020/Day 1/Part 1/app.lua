@@ -1,8 +1,8 @@
 -- Advent of Code: Day 1,Part 1
 -- DevTenga
--- 01/12/2021
+-- 11/01/2021
 
--- https://adventofcode.com/2021/day/1
+-- https://adventofcode.com/2020/day/1
 
 for _,file in ipairs(arg) do
 	local contents = io.open(file):read("*all")

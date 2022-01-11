@@ -2,7 +2,7 @@
 -- DevTenga
 -- 02/12/2021
 
--- https://adventofcode.com/2021/day/2
+-- https://adventofcode.com/2020/day/2
 
 for _,file in ipairs(arg) do
 	local contents = io.open(file):read("*all")

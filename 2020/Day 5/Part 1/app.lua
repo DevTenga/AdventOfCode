@@ -1,8 +1,8 @@
 -- Advent of Code: Day 5,Part 1
 -- DevTenga
--- 05/12/2021
+-- 11/01/2021
 
--- https://adventofcode.com/2021/day/5
+-- https://adventofcode.com/2020/day/5
 
 -- ========================== Core Functions =========================== --
 local function get_decimal_from_bin(bin_table)

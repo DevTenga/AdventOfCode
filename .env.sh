@@ -27,11 +27,11 @@ function check() {
 		num=$1
 	fi
 
-	echo -e "-- Advent of Code: Day ${1}, Part 1\n-- DevTenga\n-- $num/12/2021\n\n-- https://adventofcode.com/2021/day/$1\n\nfor _,file in ipairs(arg) do\n\tlocal contents = io.open(file):read(\"*all\")\n\n\tfor _ in string.gmatch(contents,\"regex\") do\n\t\t\n\tend\n\n\tlocal answer = 0\n\n\tprint(\"For File:\",file,\"Answer is:\",answer)\nend"
+	echo -e "-- Advent of Code: Day ${1}, Part 1\n-- DevTenga\n-- `date +%d/%m/%Y`\n\n-- https://adventofcode.com/${PWD##*/}/day/$1\n\nfor _,file in ipairs(arg) do\n\tlocal contents = io.open(file):read(\"*all\")\n\n\tfor _ in string.gmatch(contents,\"regex\") do\n\t\t\n\tend\n\n\tlocal answer = 0\n\n\tprint(\"For File:\",file,\"Answer is:\",answer)\nend"
 }
 
 function init() {
-	if [[ "$1" != " " && -n "$1" ]] ; then
+	if [[ -n "$1" ]] ; then
 
 		if [[ $1 -lt 10 ]] ; then
 			num="0${1}"
@@ -39,8 +39,8 @@ function init() {
 			num=$1
 		fi
 
-		msg1="-- Advent of Code: Day ${1},Part 1\n-- DevTenga\n-- $num/12/2021\n\n-- https://adventofcode.com/2021/day/$1\n\nfor _,file in ipairs(arg) do\n\tlocal contents = io.open(file):read(\"*all\")\n\n\tfor _ in string.gmatch(contents,\"regex\") do\n\t\t\n\tend\n\n\tlocal answer = 0\n\n\tprint(\"For File:\",file,\"Answer is:\",answer)\nend"
-		msg2="-- Advent of Code: Day ${1},Part 2\n-- DevTenga\n-- $num/12/2021\n\n-- https://adventofcode.com/2021/day/$1\n\nfor _,file in ipairs(arg) do\n\tlocal contents = io.open(file):read(\"*all\")\n\n\tfor _ in string.gmatch(contents,\"regex\") do\n\t\t\n\tend\n\n\tlocal answer = 0\n\n\tprint(\"For File:\",file,\"Answer is:\",answer)\nend"				
+		msg1="-- Advent of Code: Day ${1},Part 1\n-- DevTenga\n-- `date +%d/%m/%Y`\n\n-- https://adventofcode.com/${PWD##*/}/day/$1\n\nfor _,file in ipairs(arg) do\n\tlocal contents = io.open(file):read(\"*all\")\n\n\tfor _ in string.gmatch(contents,\"regex\") do\n\t\t\n\tend\n\n\tlocal answer = 0\n\n\tprint(\"For File:\",file,\"Answer is:\",answer)\nend"
+		msg2="-- Advent of Code: Day ${1},Part 2\n-- DevTenga\n-- `date +%d/%m/%Y`\n\n-- https://adventofcode.com/${PWD##*/}/day/$1\n\nfor _,file in ipairs(arg) do\n\tlocal contents = io.open(file):read(\"*all\")\n\n\tfor _ in string.gmatch(contents,\"regex\") do\n\t\t\n\tend\n\n\tlocal answer = 0\n\n\tprint(\"For File:\",file,\"Answer is:\",answer)\nend"				
 
 		mkdir "Day $1"
 		cd "Day $1"
