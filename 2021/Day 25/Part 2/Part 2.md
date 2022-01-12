@@ -1,0 +1,1 @@
+The **Part 2** of Day 25 is only to complete *all remaining days.*
