@@ -1,4 +1,4 @@
--- Advent of Code: Day 7,Part 2
+-- Advent of Code: Day 7,Part 1
 -- DevTenga
 -- 11/01/2022
 
@@ -32,7 +32,7 @@ for _,file in ipairs(arg) do
 	local contents = io.open(file):read("*all")
 
 	local bagRules = {}
-	local bagsMem = {}
+	local bagsMem = {} -- For memoization logic.
 
 	for bagType, bagContents in string.gmatch(contents,"(%w[%w%s]+) bags contain (%d[%d%w%s%,]+)%.") do
 		local currentBag = {}
@@ -45,18 +45,27 @@ for _,file in ipairs(arg) do
 		bagRules[bagType] = currentBag
 	end
 
-	local function check_bag(bag)
+	local function check_bag(bag, bagContents)
 		if bagsMem[bag] ~= nil then return bagsMem[bag] end
 		
-		if table_find(bag._bags,"shiny gold") then
+		if table_find(bagContents._bags,"shiny gold") then
 			bagsMem[bag] = true
 			return true
 		else
 			bagsMem[bag] = false
-			for _,innerBag in ipairs(bag._bags) do
-				innerBag = bagRules[innerBag]
-				local res = check_bag(innerBag)
-				if res then return res end
+			for _,innerBag in ipairs(bagContents._bags) do
+				
+				local innerBagContents = bagRules[innerBag]
+				if not innerBagContents then
+					bagsMem[innerBag] = false
+				else
+					local res = check_bag(innerBag, innerBagContents)
+					if res then 
+						bagsMem[bag] = true
+						return res 
+					end
+				end
+
 			end
 			return false
 		end
@@ -64,9 +73,8 @@ for _,file in ipairs(arg) do
 
 	local answer = 0
 
-	table_deepPrint(bagRules)
-	for _,bag in ipairs(bagRules) do
-		if check_bag(bag) then
+	for bag, bagContents in pairs(bagRules) do
+		if check_bag(bag, bagContents) then
 			answer = answer + 1
 		end
 	end
