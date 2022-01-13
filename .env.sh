@@ -1,5 +1,7 @@
 function test() {
-	if [[ -n "$3" ]] ; then
+	if [[ "$3" = "-e" ]] ; then
+		val="" 
+	elif [[ -n "$3" ]] ; then
 		val="$3"
 	else
 		val="*"
@@ -15,7 +17,7 @@ function test() {
 }
 
 function check() {
-	if [[ "$1" != " " && -n "$1" ]] ; then
+	if [[ -n "$1" ]] ; then
 		echo true
 	else
 		echo false
