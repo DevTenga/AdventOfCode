@@ -14,85 +14,85 @@ Given input:
   #########
 ```
 
-+ So first, we clear the path for the 'C' instances.
++ So first, we clear the path for the right 'C' instance.
 
 ```
 #############
-#BB.........#
+#.B.B.......#
 ###C#A#.#C###
   #D#D#.#A#
   #########
 ```
 
 This leaves us with:
-`A = 0; B = 14; C = 0; D = 0`.
+`A = 0; B = 11; C = 0; D = 0`.
 
-+ Next, we move the C's to their homes.
++ Next, we move the right C's to its home.
 
 ```
 #############
-#BB.........#
-###.#A#C#.###
+#.B.B.......#
+###C#A#.#.###
   #D#D#C#A#
   #########
  ```
 
 This leaves us with:
-`A = 0; B = 14; C = 11; D = 0`.
+`A = 0; B = 11; C = 5; D = 0`.
 
 + Now, we move the A away to make way for D's.
 
 ```
 #############
-#BB.......A.#
-###.#A#C#.###
+#.B.B.....AA#
+###C#.#.#.###
   #D#D#C#.#
   #########
  ```
 
 This leaves us with:
-`A = 3; B = 14; C = 11; D = 0`
+`A = 10; B = 11; C = 5; D = 0`
 
 + Now, we move the first D in.
 
 ```
 #############
-#BB.......A.#
-###.#A#C#.###
-  #.#D#C#D#
+#.B.B.....AA#
+###C#.#.#.###
+  #D#.#C#D#
   #########
  ```
 
 This leaves us with:
-`A = 3; B = 14; C = 11; D = 10`.
-
-+ We move the A's in.
-
-```
-#############
-#BB.........#
-###A#.#C#.###
-  #A#D#C#D#
-  #########
- ```
-
-This leaves us with:
-`A = 16; B = 14; C = 11; D = 10`.
-
-+ We move the second D in.
-
-```
-#############
-#BB.........#
-###A#.#C#D###
-  #A#.#C#D#
-  #########
- ```
-
-This leaves us with:
-`A = 16; B = 14; C = 11; D = 17`.
+`A = 10; B = 11; C = 5; D = 8`.
 
 + We move the B's in.
+
+```
+#############
+#.........AA#
+###C#B#.#.###
+  #D#B#C#D#
+  #########
+ ```
+
+This leaves us with:
+`A = 10; B = 18; C = 5; D = 8`.
+
++ We move the second C and second D in.
+
+```
+#############
+#.........AA#
+###.#B#C#D###
+  #.#B#C#D#
+  #########
+ ```
+
+This leaves us with:
+`A = 10; B = 18; C = 11; D = 17`.
+
++ Finally, we move the A's in.
 
 ```
 #############
@@ -103,20 +103,23 @@ This leaves us with:
  ```
 
 This leaves us with:
-`A = 16; B = 24; C = 11; D = 17`.
+`A = 16+18 = 34 ; B = 18; C = 11; D = 17`.
 
 ---
+
+last state: `A = 16; B = 24; C = 11; D = 17`.
+
 
 + We see that all our characters are at their respective homes. We now multiply the costs and add.
 
 
 ```
-A (1) = 16;
-B (10) = 240;
+A (1) = 34;
+B (10) = 180;
 C (100) = 1100;
 D (1000) = 17000;
 
-Sum = 18356 (18360 with another algorithm.) (18618 with another algorithm.)
+Sum = 18314 (18356 with another algorithm.) (18360 with another algorithm.) (18618 with another algorithm.)
 ```
 
 Thanks!
