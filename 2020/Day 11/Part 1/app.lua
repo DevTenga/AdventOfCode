@@ -35,6 +35,7 @@ function count_seats(seating, seat)
 			counter = char == seat and counter + 1 or counter
 		end
 	end
+	return counter
 end
 
 function rotate_seating(seating)
@@ -47,14 +48,12 @@ function rotate_seating(seating)
 			local empCounter = 0
 
 			for _, pair in ipairs(selector) do
-				occCounter = seating[idx + pair[1]] and seating[idx + pair[1]][idx + pair[2]] == "#" and occCounter + 1 or occCounter;
-				empCounter = seating[idx + pair[1]] and seating[idx + pair[1]][idx + pair[2]] == "L" and empCounter + 1 or empCounter;
+				occCounter = seating[idx + pair[1]] and seating[idx + pair[1]][innerIdx + pair[2]] == "#" and occCounter + 1 or occCounter;
+				empCounter = seating[idx + pair[1]] and seating[idx + pair[1]][innerIdx + pair[2]] == "L" and empCounter + 1 or empCounter;
 				
-				if seat == '.' then
-					newSeating[idx][innerIdx] = '.'
-				elseif seat == '#' and occCounter >= 4 then
+				if seat == '#' and occCounter >= 4 then
 					newSeating[idx][innerIdx] = 'L'
-				elseif seat == 'L' and empCounter == 0 then
+				elseif seat == 'L' and occCounter == 0 then
 					newSeating[idx][innerIdx] = '#'
 				else
 					newSeating[idx][innerIdx] = seat
@@ -98,7 +97,7 @@ for _,file in ipairs(arg) do
 	while didChange do
 		local nextSeating = rotate_seating(seating)
 		didChange = check_seating(seating, nextSeating)
-		show_seating(nextSeating)
+		--show_seating(nextSeating)
 		seating = nextSeating
 	end 
 
