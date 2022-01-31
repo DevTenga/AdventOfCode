@@ -6,30 +6,61 @@ function test() {
 	else
 		val="*"
 	fi
-	
+
+	if [[ !(-n `ls -1 "$1" | grep -i "app"`) ]]; then
+		ext=`basename "$1"/app* | cut -d . -f2`
+		case "$ext" in
+			l | lua | Lua)
+				cmd="lua";;
+			py | python | Python)
+				cmd="python";;
+		esac
+	fi
+
 	if [ "$2" = "-s" ] ; then 
-		lua "$1"/app.lua "$1"/sample${val}.txt
+		$cmd "$1"/app.$ext "$1"/sample${val}.txt
 	elif [ "$2" = "-i" ]; then
-			lua "$1"/app.lua "$1"/input.txt
+			$cmd "$1"/app.$ext "$1"/input.txt
 	else
-		lua "$1"/app.lua "$1"/sample${val}.txt "$1"/input.txt
+		$cmd "$1"/app.$ext "$1"/sample${val}.txt "$1"/input.txt
 	fi
 }
 
 function check() {
 	if [[ -n "$1" ]] ; then
-		echo true
-	else
-		echo false
-	fi
 
-	if [[ $1 -lt 10 ]] ; then
-		num="0${1}"
-	else
-		num=$1
-	fi
+		if [[ $1 -lt 10 ]] ; then
+			num="0${1}"
+		else
+			num=$1
+		fi
 
-	echo -e "-- Advent of Code: Day ${1}, Part 1\n-- DevTenga\n-- `date +%d/%m/%Y`\n\n-- https://adventofcode.com/${PWD##*/}/day/$1\n\nfor _,file in ipairs(arg) do\n\tlocal contents = io.open(file):read(\"*all\")\n\n\tfor _ in string.gmatch(contents,\"regex\") do\n\t\t\n\tend\n\n\tlocal answer = 0\n\n\tprint(\"For File:\",file,\"Answer is:\",answer)\nend"
+		if [[ -n "$2" ]] ; then
+			case "$2" in
+
+				l | lua | Lua)
+					copyFile=`realpath "./.boilerplate/app.lua"`;;
+				py | python | Python)
+					copyFile=`realpath "./.boilerplate/app.py"`;;
+			esac
+		else
+			copyFile=`realpath "./.boilerplate/app.lua"`
+		fi
+
+		pythonCode="
+from sys import argv as a;
+
+with open(\"$copyFile\", 'r') as f:
+	code = f.read()
+	print(a, a[1])
+	print((f'' + code).format('{}',day = \"abc\", part=2, date=3, dir=7))
+	print((f'' + code).format('{}',day=$1, part=a[1], date=\"$(date +%d/%m/%Y)\", dir=\"${PWD##*/}\"))
+"
+
+		python -c "$pythonCode" 1
+	else
+		echo "Internal error."
+	fi
 }
 
 function init() {
@@ -41,8 +72,25 @@ function init() {
 			num=$1
 		fi
 
-		msg1="-- Advent of Code: Day ${1},Part 1\n-- DevTenga\n-- `date +%d/%m/%Y`\n\n-- https://adventofcode.com/${PWD##*/}/day/$1\n\nfor _,file in ipairs(arg) do\n\tlocal contents = io.open(file):read(\"*all\")\n\n\tfor _ in string.gmatch(contents,\"regex\") do\n\t\t\n\tend\n\n\tlocal answer = 0\n\n\tprint(\"For File:\",file,\"Answer is:\",answer)\nend"
-		msg2="-- Advent of Code: Day ${1},Part 2\n-- DevTenga\n-- `date +%d/%m/%Y`\n\n-- https://adventofcode.com/${PWD##*/}/day/$1\n\nfor _,file in ipairs(arg) do\n\tlocal contents = io.open(file):read(\"*all\")\n\n\tfor _ in string.gmatch(contents,\"regex\") do\n\t\t\n\tend\n\n\tlocal answer = 0\n\n\tprint(\"For File:\",file,\"Answer is:\",answer)\nend"				
+		if [[ -n "$2" ]] ; then
+			case "$2" in
+
+				l | lua | Lua)
+					copyFile=`realpath "./.boilerplate/app.lua"`;;
+				py | python | Python)
+					copyFile=`realpath "./.boilerplate/app.py"`;;
+			esac
+		else
+			copyFile=`realpath "./.boilerplate/app.lua"`
+		fi
+
+		pythonCode="
+from sys import argv as a;
+
+with open(\"$copyFile\", 'r') as f:
+	code = f.read()
+	print((f'' + code).format('{}',day=$1, part=a[1], date=\"$(date +%d/%m/%Y)\", dir=\"${PWD##*/}\"))
+"
 
 		mkdir "Day $1"
 		cd "Day $1"
@@ -51,24 +99,23 @@ function init() {
 		cd "Part 1"
 		touch sample.txt
 		touch input.txt
-		echo -e "$msg1" > app.lua
+		python -c "${pythonCode}" 1 > `basename "$copyFile"`
 		cd ".."
 
 		mkdir "Part 2"
 		cd "Part 2"
 		touch sample.txt
 		touch input.txt
-		echo -e "$msg2" > app.lua
+		python -c "$pythonCode" 2 > `basename "$copyFile"`
 		cd ".."
-
-		cd ".."
+		echo "Initialized ${PWD} with boilerplate `basename $copyFile`"
 	else
 		echo "Internal error."
 	fi
 }
 
 function initnext() {
-	if [[ "$1" != " " && -n "$1" ]] ; then
+	if [[ -n "$1" ]] ; then
 		cp "$1/Part 1"/* "$1/Part 2"
 	fi
 }
@@ -82,7 +129,7 @@ function ntouch()  {
 	COUNT=1
 
 	while [[ $COUNT -le $count ]]; do
-		if [[ "$ext" = " " || ! -n "$ext" ]] ; then
+		if [[ ! -n "$ext" ]] ; then
 			ext=".txt"
 		fi
 		touch "$adr/$name$COUNT$ext"
