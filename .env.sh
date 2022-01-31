@@ -39,12 +39,12 @@ function check() {
 			case "$2" in
 
 				l | lua | Lua)
-					copyFile=`realpath "./.boilerplate/app.lua"`;;
+					copyFile=`realpath "../.boilerplate/app.lua"`;;
 				py | python | Python)
-					copyFile=`realpath "./.boilerplate/app.py"`;;
+					copyFile=`realpath "../.boilerplate/app.py"`;;
 			esac
 		else
-			copyFile=`realpath "./.boilerplate/app.lua"`
+			copyFile=`realpath "../.boilerplate/app.lua"`
 		fi
 
 		pythonCode="
@@ -56,7 +56,7 @@ with open(\"$copyFile\", 'r') as f:
 	print((f'' + code).format('{}',day = \"abc\", part=2, date=3, dir=7))
 	print((f'' + code).format('{}',day=$1, part=a[1], date=\"$(date +%d/%m/%Y)\", dir=\"${PWD##*/}\"))
 "
-
+		echo `basename $copyFile`
 		python -c "$pythonCode" 1
 	else
 		echo "Internal error."
@@ -76,12 +76,12 @@ function init() {
 			case "$2" in
 
 				l | lua | Lua)
-					copyFile=`realpath "./.boilerplate/app.lua"`;;
+					copyFile=`realpath "../.boilerplate/app.lua"`;;
 				py | python | Python)
-					copyFile=`realpath "./.boilerplate/app.py"`;;
+					copyFile=`realpath "../.boilerplate/app.py"`;;
 			esac
 		else
-			copyFile=`realpath "./.boilerplate/app.lua"`
+			copyFile=`realpath "../.boilerplate/app.lua"`
 		fi
 
 		pythonCode="
