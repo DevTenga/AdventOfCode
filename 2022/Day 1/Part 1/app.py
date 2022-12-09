@@ -10,12 +10,9 @@ import re as RegEx
 answers = {}
 
 for file in arg[1:]:
-	contents = open(file, 'r').read()
+	contents = open(file, 'r').read().split("\n\n");
 
-	for matches in RegEx.findall(r'regex', contents):
-		pass
-
-	answer = 0
+	answer = max( [sum(map(int, e.split("\n"))) for e in contents if e != ''])
 
 	answers[file]= answer
 

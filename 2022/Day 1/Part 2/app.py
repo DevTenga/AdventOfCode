@@ -1,4 +1,4 @@
-# Advent of Code: Day 1, Part 2
+# Advent of Code: Day 1, Part 1
 # DevTenga
 # 09/12/2022
 
@@ -10,14 +10,24 @@ import re as RegEx
 answers = {}
 
 for file in arg[1:]:
-	contents = open(file, 'r').read()
+	contents = open(file, 'r').read().split("\n\n");
 
-	for matches in RegEx.findall(r'regex', contents):
-		pass
+	values = [sum(map(int, e.split("\n"))) for e in contents if e != '']
 
-	answer = 0
+	m1, m2, m3 = 0,0,0
 
-	answers[file]= answer
+	for e in values:
+		if e > m1:
+			m3 = m2
+			m2 = m1
+			m1 = e;
+		elif e > m2:
+			m3 = m2
+			m2 = e;
+		elif e > m3:
+			m3 = e;
+
+	answers[file] = m1 + m2 + m3;
 
 print('''
 
